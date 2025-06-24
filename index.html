@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <title>Carian Ayat al-Quran Mengikut Tema</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    input, button { padding: 10px; margin-top: 10px; width: 100%; }
+    pre { background: #f4f4f4; padding: 15px; white-space: pre-wrap; }
+
+  
+
+    .card {
+      background-color: #f9f9f9;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-left: 5px solid #4caf50;
+      border-radius: 8px;
+      box-shadow: 1px 1px 5px rgba(0,0,0,0.05);
+    }
+    .card .surah {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .arab {
+      font-size: 1.5em;
+      font-family: 'Scheherazade New', serif;
+      direction: rtl;
+      text-align: right;
+      margin-top: 10px;
+    }
+    .card .terjemahan {
+      margin-top: 15px;
+      font-size: 1.1em;
+      line-height: 1.6;
+      color: #333;
+      font-style: italic;
+    }
+
+    body.dark-mode .card .terjemahan {
+      color: #ccc;
+    }
+
+
+    
+    .loader {
+      position: relative;
+      width: 60px;
+      height: 60px;
+      margin: 30px auto;
+    }
+
+    .loader::before {
+      content: "";
+      box-sizing: border-box;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border: 5px solid #e0e0e0;
+      border-top-color: #4caf50;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .loader span {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 0.9rem;
+      font-family: 'Scheherazade New', serif;
+      color: #4caf50;
+    }
+
+    body.dark-mode {
+      background-color: #121212;
+      color: #ffffff;
+    }
+    body.dark-mode input,
+    body.dark-mode button {
+      background-color: #1e1e1e;
+      color: #ffffff;
+      border: 1px solid #444;
+    }
+    body.dark-mode .card {
+      background-color: #1f1f1f;
+      border-left-color: #4caf50;
+    }
+
+
+
+  </style>
+</head>
+<body>
+  <h1>Carian Ayat al-Quran Mengikut Tema</h1>
+  <input type="text" id="tema" placeholder="Contoh: sabar, rezeki, ujian" />
+  <button onclick="cariAyat()">Cari Ayat</button>
+  <div id="output" class="output-box" style="font-size: 1.1rem;">📥 Sila masukkan tema dan tekan "Cari Ayat".</div>
+
+  <script defer>
+      // Fungsi untuk mendapatkan nama surah berdasarkan nombor
+      function namaSurah(index) {
+        const senarai = [
+          "", "Al-Fatihah", "Al-Baqarah", "Ali 'Imran", "An-Nisa'", "Al-Ma'idah",
+          "Al-An'am", "Al-A'raf", "Al-Anfal", "At-Tawbah", "Yunus", "Hud",
+          "Yusuf", "Ar-Ra'd", "Ibrahim", "Al-Hijr", "An-Nahl", "Al-Isra'",
+          "Al-Kahf", "Maryam", "Ta-Ha", "Al-Anbiya'", "Al-Hajj", "Al-Mu'minun",
+          "An-Nur", "Al-Furqan", "Ash-Shu'ara'", "An-Naml", "Al-Qasas", "Al-'Ankabut",
+          "Ar-Rum", "Luqman", "As-Sajdah", "Al-Ahzab", "Saba'", "Fatir",
+          "Ya-Sin", "As-Saffat", "Sad", "Az-Zumar", "Ghafir", "Fussilat",
+          "Ash-Shura", "Az-Zukhruf", "Ad-Dukhan", "Al-Jathiyah", "Al-Ahqaf",
+          "Muhammad", "Al-Fath", "Al-Hujurat", "Qaf", "Adh-Dhariyat", "At-Tur",
+          "An-Najm", "Al-Qamar", "Ar-Rahman", "Al-Waqi'ah", "Al-Hadid",
+          "Al-Mujadila", "Al-Hashr", "Al-Mumtahanah", "As-Saff", "Al-Jumu'ah",
+          "Al-Munafiqun", "At-Taghabun", "At-Talaq", "At-Tahrim", "Al-Mulk",
+          "Al-Qalam", "Al-Haqqah", "Al-Ma'arij", "Nuh", "Al-Jinn", "Al-Muzzammil",
+          "Al-Muddaththir", "Al-Qiyamah", "Al-Insan", "Al-Mursalat", "An-Naba'",
+          "An-Nazi'at", "'Abasa", "At-Takwir", "Al-Infitar", "Al-Mutaffifin",
+          "Al-Inshiqaq", "Al-Buruj", "At-Tariq", "Al-A'la", "Al-Ghashiyah",
+          "Al-Fajr", "Al-Balad", "Ash-Shams", "Al-Layl", "Ad-Duhaa", "Ash-Sharh",
+          "At-Tin", "Al-'Alaq", "Al-Qadr", "Al-Bayyinah", "Az-Zalzalah",
+          "Al-'Adiyat", "Al-Qari'ah", "At-Takathur", "Al-Asr", "Al-Humazah",
+          "Al-Fil", "Quraysh", "Al-Ma'un", "Al-Kawthar", "Al-Kafirun",
+          "An-Nasr", "Al-Masad", "Al-Ikhlas", "Al-Falaq", "An-Nas"
+        ];
+        return senarai[index] || `Surah ${index}`;
+      }
+
+      async function cariAyat() {
+        const tema = document.getElementById("tema").value.trim();
+        const output = document.getElementById("output");
+
+        if (!tema) {
+          output.innerText = "⚠️ Sila masukkan tema dahulu.";
+          return;
+        }
+
+        output.innerHTML = `<div class="loader"><span>بسم الله</span></div>`;
+
+        try {
+          const res = await fetch("/ayat-bertema", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tema })
+          });
+
+          const text = await res.text();
+          const data = JSON.parse(text);
+
+          if (data.hasil) {
+            const hasilArray = data.hasil.split("\n\n");
+            output.innerHTML = hasilArray.map(item => {
+              const lines = item.split("\n");
+              const surahInfo = lines[0] || "";
+              const padanan = surahInfo.match(/^(\d+)\s+Ayat\s+(\d+)/);
+              let surahNum = 1;
+              let ayatNum = 1;
+              let nama = surahInfo;
+
+              if (padanan) {
+                surahNum = parseInt(padanan[1]);
+                ayatNum = parseInt(padanan[2]);
+                nama = `${surahNum}. Surah ${namaSurah(surahNum)} Ayat ${ayatNum}`;
+              }
+
+              let arab = lines[1]?.replace("Arab: ", "") || "";
+              let maksud = lines[2]?.replace("Terjemahan: ", "") || "";
+
+              const temaRegEx = new RegExp(tema, "gi");
+              maksud = maksud.replace(temaRegEx, match => `<mark>${match}</mark>`);
+              arab = arab.replace(temaRegEx, match => `<mark>${match}</mark>`);
+
+              return `
+                <div class="card">
+                  <div class="surah">📖 ${nama}</div>
+                  <div class="arab">${arab}</div>
+                  <div class="terjemahan">"${maksud}"</div>
+                  <button onclick="lihatAsbab(${surahNum}, ${ayatNum})">
+                    📜 Lihat Asbab al-Nuzul
+                  </button>
+                  <div class="asbab-output" style="margin-top: 10px;"></div>
+                </div>
+              `;
+            }).join("");
+          } else if (data.error) {
+            output.innerText = "❌ " + data.error;
+          } else {
+            output.innerText = "❌ Ralat tidak dikenali.";
+          }
+
+        } catch (err) {
+          console.error("❌ Ralat semasa permintaan:", err);
+          output.innerText = "❌ Ralat semasa memproses.";
+        }
+      }
+
+      async function lihatAsbab(surah, ayat) {
+        const button = event.target;
+        const wrapper = button.closest(".card");
+        const outputDiv = wrapper.querySelector(".asbab-output");
+
+        outputDiv.innerHTML = "<div class='loader'><span>بسم الله</span></div>";
+
+        try {
+          const res = await fetch("/asbab", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ surah, ayat })
+          });
+          const data = await res.json();
+
+          if (data.asbab) {
+            outputDiv.innerHTML = `<blockquote style="background:#f9f9f9;padding:10px;border-left:4px solid #4caf50;border-radius:4px;">📝 ${data.asbab}</blockquote>`;
+          } else {
+            outputDiv.innerHTML = `<div style="color:red;font-weight:bold;">❌ Tiada sebab penurunan.</div>`;
+          }
+        } catch (err) {
+          outputDiv.innerHTML = `<div style="color:red;">❌ Ralat semasa memproses permintaan.</div>`;
+        }
+      }
+
+
+      // Pastikan boleh dipanggil global
+      window.cariAyat = cariAyat;
+      window.lihatAsbab = lihatAsbab;
+    
+
+
+  </script>
+
+</body>
+</html>
